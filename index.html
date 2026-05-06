@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>DXL/FBB Board Candidate Ranking</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    background: #fafaf7;
+    color: #1f1f1d;
+    margin: 0;
+    padding: 32px 24px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .container { max-width: 880px; margin: 0 auto; }
+  h1 { font-size: 20px; font-weight: 500; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .subtitle { font-size: 13px; color: #6b6b66; margin: 0 0 20px; }
+  .table-wrap {
+    background: #ffffff;
+    border-radius: 10px;
+    border: 0.5px solid rgba(0,0,0,0.12);
+    overflow: hidden;
+  }
+  table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 14px; }
+  th {
+    background: #f3f1ea;
+    padding: 11px 14px;
+    text-align: left;
+    font-weight: 500;
+    font-size: 12px;
+    color: #5f5e5a;
+    letter-spacing: 0.01em;
+    border-bottom: 0.5px solid rgba(0,0,0,0.08);
+  }
+  th.center { text-align: center; }
+  td {
+    padding: 12px 14px;
+    border-bottom: 0.5px solid rgba(0,0,0,0.06);
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  .nm { font-weight: 500; }
+  .na { color: #a8a6a1; text-align: center; font-size: 12px; font-style: italic; }
+  .center { text-align: center; }
+  .con {
+    background: #f7f5ee;
+    font-weight: 500;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    font-size: 13px;
+  }
+  .top { color: #0f6e56; }
+  select {
+    width: 60px;
+    padding: 5px 6px;
+    font-size: 14px;
+    border: 0.5px solid rgba(0,0,0,0.2);
+    border-radius: 5px;
+    background: white;
+    font-family: inherit;
+    color: inherit;
+    cursor: pointer;
+  }
+  select:focus { outline: 2px solid rgba(31, 95, 165, 0.3); outline-offset: 1px; }
+  .controls {
+    margin-top: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .legend { font-size: 12px; color: #888780; line-height: 1.55; flex: 1; max-width: 580px; }
+  button {
+    padding: 7px 14px;
+    font-size: 13px;
+    border: 0.5px solid rgba(0,0,0,0.2);
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    font-family: inherit;
+    color: inherit;
+    white-space: nowrap;
+  }
+  button:hover { background: #f3f1ea; }
+  .status {
+    font-size: 11px;
+    color: #a8a6a1;
+    text-align: right;
+    margin-top: 10px;
+    height: 14px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>DXL/FBB board candidate — committee ranking matrix</h1>
+  <p class="subtitle">Engaged slate · status as of May 5, 2026</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 28%;">Candidate</th>
+          <th class="center" style="width: 12%;">Steve</th>
+          <th class="center" style="width: 12%;">Jack</th>
+          <th class="center" style="width: 12%;">Yasir</th>
+          <th class="center" style="width: 12%;">Carmen</th>
+          <th class="center" style="width: 24%;">Consolidated</th>
+        </tr>
+      </thead>
+      <tbody id="rt-body"></tbody>
+    </table>
+  </div>
+
+  <div class="controls">
+    <div class="legend">Lower score = stronger preference. Slot in the rank each member assigned within the candidates they met (1 = top of their slate). Consolidated column averages across members who met that candidate. Values save automatically to your browser.</div>
+    <button id="reset-btn">Reset all</button>
+  </div>
+
+  <div class="status" id="save-status"></div>
+</div>
+
+<script>
+(function(){
+  const candidates = [
+    { id: 'lang',  name: 'Molly Langenstein', met: ['steve','jack','yasir'] },
+    { id: 'vp',    name: 'Mary Van Praag',    met: ['steve','jack','yasir'] },
+    { id: 'hauk',  name: 'Amy Hauk',          met: ['steve','carmen'] },
+    { id: 'green', name: 'Robin Green',       met: ['steve','carmen'] }
+  ];
+  const members = ['steve','jack','yasir','carmen'];
+  const STORAGE_KEY = 'dxl_fbb_ranking_v1';
+
+  const memberSize = {};
+  members.forEach(m => { memberSize[m] = candidates.filter(c => c.met.includes(m)).length; });
+
+  const tbody = document.getElementById('rt-body');
+  const statusEl = document.getElementById('save-status');
+
+  candidates.forEach(c => {
+    const tr = document.createElement('tr');
+    const nameTd = document.createElement('td');
+    nameTd.className = 'nm';
+    nameTd.textContent = c.name;
+    tr.appendChild(nameTd);
+
+    members.forEach(m => {
+      const td = document.createElement('td');
+      td.classList.add('center');
+      if (c.met.includes(m)) {
+        const sel = document.createElement('select');
+        sel.dataset.member = m;
+        sel.dataset.candidate = c.id;
+        const blank = document.createElement('option');
+        blank.value = '';
+        blank.textContent = '—';
+        sel.appendChild(blank);
+        for (let i = 1; i <= memberSize[m]; i++) {
+          const opt = document.createElement('option');
+          opt.value = i;
+          opt.textContent = i;
+          sel.appendChild(opt);
+        }
+        sel.addEventListener('change', function(){ recompute(); save(); });
+        td.appendChild(sel);
+      } else {
+        td.classList.add('na');
+        td.textContent = 'not met';
+      }
+      tr.appendChild(td);
+    });
+
+    const conTd = document.createElement('td');
+    conTd.className = 'con';
+    conTd.id = 'con-' + c.id;
+    conTd.textContent = '—';
+    tr.appendChild(conTd);
+
+    tbody.appendChild(tr);
+  });
+
+  function getCurrentValues() {
+    const data = {};
+    document.querySelectorAll('select').forEach(s => {
+      const k = s.dataset.candidate + '_' + s.dataset.member;
+      data[k] = s.value;
+    });
+    return data;
+  }
+
+  function applyValues(data) {
+    if (!data) return;
+    document.querySelectorAll('select').forEach(s => {
+      const k = s.dataset.candidate + '_' + s.dataset.member;
+      if (data[k] !== undefined) s.value = data[k];
+    });
+  }
+
+  function save() {
+    try {
+      const data = getCurrentValues();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      const t = new Date();
+      const hh = String(t.getHours()).padStart(2,'0');
+      const mm = String(t.getMinutes()).padStart(2,'0');
+      statusEl.textContent = 'Saved · ' + hh + ':' + mm;
+    } catch(e) {
+      statusEl.textContent = 'Could not save (private browsing?)';
+    }
+  }
+
+  function load() {
+    try {
+      const value = localStorage.getItem(STORAGE_KEY);
+      if (value) {
+        applyValues(JSON.parse(value));
+        recompute();
+      }
+    } catch(e) {}
+  }
+
+  function recompute() {
+    const results = candidates.map(c => {
+      const sels = document.querySelectorAll('select[data-candidate="' + c.id + '"]');
+      const vals = [];
+      sels.forEach(s => { if (s.value) vals.push(parseInt(s.value, 10)); });
+      const avg = vals.length ? vals.reduce((a,b) => a+b, 0) / vals.length : null;
+      return { id: c.id, avg: avg };
+    });
+
+    const ranked = results.filter(r => r.avg !== null).sort((a,b) => a.avg - b.avg);
+    const rankMap = {};
+    let lastAvg = null, lastRank = 0;
+    ranked.forEach((r, i) => {
+      if (r.avg === lastAvg) { rankMap[r.id] = lastRank; }
+      else { rankMap[r.id] = i + 1; lastRank = i + 1; lastAvg = r.avg; }
+    });
+
+    results.forEach(r => {
+      const cell = document.getElementById('con-' + r.id);
+      if (r.avg === null) {
+        cell.textContent = '—';
+        cell.classList.remove('top');
+      } else {
+        const rank = rankMap[r.id];
+        cell.textContent = '#' + rank + '  ·  ' + r.avg.toFixed(2) + ' avg';
+        if (rank === 1) cell.classList.add('top');
+        else cell.classList.remove('top');
+      }
+    });
+  }
+
+  document.getElementById('reset-btn').addEventListener('click', function(){
+    if (!confirm('Clear all rankings?')) return;
+    document.querySelectorAll('select').forEach(s => { s.value = ''; });
+    recompute();
+    save();
+  });
+
+  load();
+})();
+</script>
+</body>
+</html>
