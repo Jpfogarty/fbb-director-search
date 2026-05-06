@@ -40,7 +40,6 @@
   }
   tr:last-child td { border-bottom: none; }
   .nm { font-weight: 500; }
-  .na { color: #a8a6a1; text-align: center; font-size: 12px; font-style: italic; }
   .center { text-align: center; }
   .con {
     background: #f7f5ee;
@@ -94,7 +93,7 @@
 <body>
 <div class="container">
   <h1>DXL/FBB board candidate — committee ranking matrix</h1>
-  <p class="subtitle">Engaged slate · status as of May 5, 2026</p>
+  <p class="subtitle">Engaged slate</p>
 
   <div class="table-wrap">
     <table>
@@ -113,7 +112,7 @@
   </div>
 
   <div class="controls">
-    <div class="legend">Lower score = stronger preference. Slot in the rank each member assigned within the candidates they met (1 = top of their slate). Consolidated column averages across members who met that candidate. Values save automatically to your browser.</div>
+    <div class="legend">Lower score = stronger preference. Each member ranks all candidates 1–3 (1 = top). Consolidated column averages across all members who voted. Values save automatically to your browser.</div>
     <button id="reset-btn">Reset all</button>
   </div>
 
@@ -123,16 +122,13 @@
 <script>
 (function(){
   const candidates = [
-    { id: 'lang',  name: 'Molly Langenstein', met: ['steve','jack','yasir'] },
-    { id: 'vp',    name: 'Mary Van Praag',    met: ['steve','jack','yasir'] },
-    { id: 'hauk',  name: 'Amy Hauk',          met: ['steve','carmen'] },
-    { id: 'green', name: 'Robin Green',       met: ['steve','carmen'] }
+    { id: 'vp',    name: 'Mary Van Praag' },
+    { id: 'hauk',  name: 'Amy Hauk' },
+    { id: 'green', name: 'Robin Green' }
   ];
   const members = ['steve','jack','yasir','carmen'];
-  const STORAGE_KEY = 'dxl_fbb_ranking_v1';
-
-  const memberSize = {};
-  members.forEach(m => { memberSize[m] = candidates.filter(c => c.met.includes(m)).length; });
+  const STORAGE_KEY = 'dxl_fbb_ranking_v2';
+  const SLATE_SIZE = candidates.length;
 
   const tbody = document.getElementById('rt-body');
   const statusEl = document.getElementById('save-status');
@@ -147,26 +143,21 @@
     members.forEach(m => {
       const td = document.createElement('td');
       td.classList.add('center');
-      if (c.met.includes(m)) {
-        const sel = document.createElement('select');
-        sel.dataset.member = m;
-        sel.dataset.candidate = c.id;
-        const blank = document.createElement('option');
-        blank.value = '';
-        blank.textContent = '—';
-        sel.appendChild(blank);
-        for (let i = 1; i <= memberSize[m]; i++) {
-          const opt = document.createElement('option');
-          opt.value = i;
-          opt.textContent = i;
-          sel.appendChild(opt);
-        }
-        sel.addEventListener('change', function(){ recompute(); save(); });
-        td.appendChild(sel);
-      } else {
-        td.classList.add('na');
-        td.textContent = 'not met';
+      const sel = document.createElement('select');
+      sel.dataset.member = m;
+      sel.dataset.candidate = c.id;
+      const blank = document.createElement('option');
+      blank.value = '';
+      blank.textContent = '—';
+      sel.appendChild(blank);
+      for (let i = 1; i <= SLATE_SIZE; i++) {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = i;
+        sel.appendChild(opt);
       }
+      sel.addEventListener('change', function(){ recompute(); save(); });
+      td.appendChild(sel);
       tr.appendChild(td);
     });
 
